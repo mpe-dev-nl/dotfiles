@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+dir=$(dirname -- "$script_dir") # dotfiles directory
+olddir=~/.dotfiles_old          # old dotfiles backup directory
+
+echo "Creating $olddir for backup of any existing dotfiles in ~"
+mkdir -p $olddir
+
+echo "Changing to the $dir directory"
+cd $dir
+
+for file in ./dots/*; do
+	filename=$(echo $file | rev | cut -d'/' -f-1 | rev)
+
+	if [ ! -f ~/.$filename ]; then
+		echo "Moving existing file ~/.$filename to $olddir/.$filename"
+		mv ~/.$filename $olddir/
+	fi
+
+	if [ ! -e ~/.$filename ]; then
+		echo "Creating symlink to $filename in home directory."
+		ln -s $dir/dots/$filename ~/.$filename
+	fi
+done
+
+if [ ! -d ~/.config ]; then
+	mkdir ~/.config
+fi
+
+for file in ./config/*; do
+	filename=$(echo $file | rev | cut -d'/' -f-1 | rev)
+	if [ ! -e ~/.config/$filename ]; then
+		echo "Creating symlink to $filename in .config directory."
+		ln -s $dir/config/$filename ~/.config/$filename
+	fi
+done
+
+echo "Updating Brew packages"
+brew update &&
+	brew bundle install --cleanup --file=~/.config/brew/Brewfile --no-lock &&
+	brew upgrade
+
+echo "Installing zsh4humans"
+if command -v curl >/dev/null 2>&1; then
+	sh -c "$(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh4humans/v5/install)"
+else
+	sh -c "$(wget -O- https://raw.githubusercontent.com/romkatv/zsh4humans/v5/install)"
+fi
