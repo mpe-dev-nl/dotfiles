@@ -13,35 +13,19 @@ cd $dir
 for file in ./dots/*; do
 	filename=$(echo $file | rev | cut -d'/' -f-1 | rev)
 
-	if [ ! -f ~/.$filename ]; then
-		echo "Moving existing file ~/.$filename to $olddir/.$filename"
-		mv ~/.$filename $olddir/
-	fi
-
-	if [ ! -e ~/.$filename ]; then
-		echo "Creating symlink to $filename in home directory."
-		ln -s $dir/dots/$filename ~/.$filename
-	fi
-done
-
-if [ ! -d ~/.config ]; then
-	mkdir ~/.config
-fi
-
-for file in ./config/*; do
-	filename=$(echo $file | rev | cut -d'/' -f-1 | rev)
-	if [ ! -e ~/.config/$filename ]; then
-		echo "Creating symlink to $filename in .config directory."
-		ln -s $dir/config/$filename ~/.config/$filename
+	if [ -f ~/.$filename ]; then
+		echo "Backing up existing file ~/.$filename to $olddir/.$filename"
+		cp ~/.$filename $olddir/
 	fi
 done
 
 echo "Updating Brew packages"
 brew update &&
-	brew bundle install --cleanup --file=~/.config/brew/Brewfile --no-lock &&
+	brew bundle install --cleanup --file=./config/brew/Brewfile --no-lock &&
 	brew upgrade
 
-echo "Installing zsh4humans"
+# TODO: Should run setup-1 and setup-2 in one go ..
+echo "Installing zsh4humans - Continue after completion of setup-1 with setup-2"
 if command -v curl >/dev/null 2>&1; then
 	sh -c "$(curl -fsSL https://raw.githubusercontent.com/romkatv/zsh4humans/v5/install)"
 else

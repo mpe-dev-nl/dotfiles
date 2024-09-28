@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+dir=$(dirname -- "$script_dir") # dotfiles directory
+olddir=~/.dotfiles_old          # old dotfiles backup directory
+
+echo "Creating $olddir for backup of any existing dotfiles in ~"
+mkdir -p $olddir
+
+echo "Changing to the $dir directory"
+cd $dir
+
+echo "Linking dot files from dotfiles repository"
+for file in ./dots/*; do
+	filename=$(echo $file | rev | cut -d'/' -f-1 | rev)
+
+	if [ -e ~/.$filename ]; then
+		echo "Removing existing file .$filename in home directory."
+		rm -f ~/.$filename
+	fi
+
+	echo "Creating symlink to $filename in home directory."
+	ln -s $dir/dots/$filename ~/.$filename
+done
+
+echo "Linking config files and directories from dotfiles repository"
+if [ ! -d ~/.config ]; then
+	mkdir ~/.config
+fi
+
+for file in ./config/*; do
+	filename=$(echo $file | rev | cut -d'/' -f-1 | rev)
+	if [ -e ~/.config/$filename ]; then
+		echo "Backing up $filename in .config directory."
+		cp -R ~/.config/$filename ~/.config/$filename-backup
+
+		echo "Removing $filename in .config directory."
+		rm -rf ~/.config/$filename
+	fi
+
+	echo "Creating symlink to $filename in .config directory."
+	ln -s $dir/config/$filename ~/.config/$filename
+done
+
+echo "Done ..."
