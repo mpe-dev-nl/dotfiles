@@ -75,3 +75,5 @@ cask "hiddenbar"
 cask "rar"
 cask "raycast"
 cask "stats"
+cask "visual-studio-code"
+
